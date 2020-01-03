@@ -19,6 +19,20 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(VisibleAnywhere, Category = Granade)
+	class UStaticMeshComponent* GranadeMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = Granade)
+	class UBoxComponent* GranadeTrigger;
+
+	UPROPERTY(VisibleAnywhere, Category = Granade)
+	class UAudioComponent* PickUpSound;
+
+	UFUNCTION()
+	void OnPickUpRange(class UPrimitiveComponent* OverlappedComp,
+		class AActor* OtherActor, class UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

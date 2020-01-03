@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Runtime/Renderer/Public/MeshDrawShaderBindings.h"
 #include "GameFramework/Controller.h"
+#include "Components/AudioComponent.h"
 #include "Math/UnrealMathUtility.h" 
 #include "Components/TextRenderComponent.h"
 #include "UObject/ConstructorHelpers.h" 
@@ -23,6 +24,7 @@ ABuildingEscapeCharacter::ABuildingEscapeCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	Timer = 0;
+	bHasGranade = false;
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
@@ -72,7 +74,6 @@ ABuildingEscapeCharacter::ABuildingEscapeCharacter()
 	BurnCounterText->bVisible = false;
 	BurnCounterText->SetText(FString::SanitizeFloat(Timer));
 
-
 	ConstructorHelpers::FObjectFinder<UAnimMontage> 
 		DebuffAnimMontage(TEXT("AnimMontage'/Game/GenericNPCAnimPack/Animations/DebuffsMontage.DebuffsMontage'"));
 	
@@ -80,6 +81,12 @@ ABuildingEscapeCharacter::ABuildingEscapeCharacter()
 	{
 		DebuffMontage = DebuffAnimMontage.Object;
 	}
+
+	BurningSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BurnSound"));
+	BurningSound->SetupAttachment(RootComponent);
+	BurningSound->bAutoActivate = false;
+
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABuildingEscapeCharacter::EnterPickUpRange);
 
 }
 
@@ -129,13 +136,25 @@ void ABuildingEscapeCharacter::StopBurning(float DeltaTime)
 
 	BurnCounterText->Activate(true);
 	BurnCounterText->bVisible = true;
+	BurnCounterText->SetText(FString::SanitizeFloat(Timer));
 
 	if (Timer<= 0.1f)
 	{
 		PlayAnimMontage(DebuffMontage, 1.f, "start01");
+		BurningSound->Activate(true);
+		BurningSound->PitchModulationMax = 1.2;
+		BurningSound->PitchModulationMin = 0.9;
+		BurningSound->bStopWhenOwnerDestroyed = false;
+		BurningSound->Play(0.0f);
 	}
-	//BurnCounterText->SetRelativeRotation(CameraBoom->GetTargetRotation());
-	BurnCounterText->SetText(FString::SanitizeFloat(Timer));
+	else if (Timer >= 2.5f && Timer <= 2.6f)
+	{
+		BurningSound->Activate(true);
+		BurningSound->PitchModulationMax = 1.2;
+		BurningSound->PitchModulationMin = 0.9;
+		BurningSound->bStopWhenOwnerDestroyed = false;
+		BurningSound->Play(0.0f);
+	}
 
 	if (Timer >= 5.f)
 	{
@@ -160,6 +179,18 @@ void ABuildingEscapeCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVect
 void ABuildingEscapeCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
 		StopJumping();
+}
+
+void ABuildingEscapeCharacter::EnterPickUpRange(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor->ActorHasTag("Interactable"))
+	{
+		if (!bHasGranade)
+		{
+			PlayAnimMontage(DebuffMontage, 1.f, "start02");
+			bHasGranade = true;
+		}
+	}
 }
 
 void ABuildingEscapeCharacter::TurnAtRate(float Rate)

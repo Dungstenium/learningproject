@@ -25,6 +25,8 @@ class ABuildingEscapeCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, Category = BurningCounter)
 	class UTextRenderComponent* BurnCounterText;
 
+	UPROPERTY(VisibleAnywhere, Category = BurningSound)
+	class UAudioComponent* BurningSound;
 
 public:
 	ABuildingEscapeCharacter();
@@ -38,7 +40,8 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation)
-		class UAnimMontage* DebuffMontage;
+	class UAnimMontage* DebuffMontage;
+
 protected:
 
 	/** Resets HMD orientation in VR. */
@@ -68,11 +71,18 @@ protected:
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
+	UFUNCTION()
+		void EnterPickUpRange(class UPrimitiveComponent* OverlappedComp,
+		class AActor* OtherActor, class UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
 	float Timer;
+
+	bool bHasGranade;
 
 public:
 	/** Returns CameraBoom subobject **/
