@@ -42,6 +42,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation)
 	class UAnimMontage* DebuffMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+	class UMoneyManager* MoneyManager;
 protected:
 
 	/** Resets HMD orientation in VR. */

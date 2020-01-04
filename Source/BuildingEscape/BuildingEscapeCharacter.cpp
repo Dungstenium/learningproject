@@ -9,6 +9,7 @@
 #include "Runtime/Renderer/Public/MeshDrawShaderBindings.h"
 #include "GameFramework/Controller.h"
 #include "Components/AudioComponent.h"
+#include "MoneyManager.h"
 #include "Math/UnrealMathUtility.h" 
 #include "Components/TextRenderComponent.h"
 #include "UObject/ConstructorHelpers.h" 
@@ -88,6 +89,7 @@ ABuildingEscapeCharacter::ABuildingEscapeCharacter()
 
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ABuildingEscapeCharacter::EnterPickUpRange);
 
+	//MoneyManager = CreateDefaultSubobject<UMoneyManager>(TEXT("Money Handler"));
 }
 
 //////////////////////////////////////////////////////////////////////////
