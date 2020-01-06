@@ -25,9 +25,4 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "Grab Area")
 	class UBoxComponent* GrabArea;
-
-	//UFUNCTION()
-	//void MakeSale(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor,
-	//	class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
 };
