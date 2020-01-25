@@ -42,8 +42,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation)
 	class UAnimMontage* DebuffMontage;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Animation)
+	class UAnimMontage* RollMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 	class UMoneyManager* MoneyManager;
+
 protected:
 
 	/** Resets HMD orientation in VR. */
@@ -55,6 +59,7 @@ protected:
 	/** Called for side to side input */
 	void MoveRight(float Value);
 
+	void Roll();
 	/** 
 	 * Called via input to turn at a given rate. 
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
@@ -68,10 +73,10 @@ protected:
 	void LookUpAtRate(float Rate);
 
 	/** Handler for when a touch input begins. */
-	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
+	//void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
 
-	/** Handler for when a touch input stops. */
-	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
+	///** Handler for when a touch input stops. */
+	//void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
 
 	UFUNCTION()
 		void EnterPickUpRange(class UPrimitiveComponent* OverlappedComp,
@@ -84,8 +89,17 @@ protected:
 	// End of APawn interface
 	float Timer;
 
+	float XMoveDir;
+	float YMoveDir;
+
 	bool bHasGranade;
 
+	UPROPERTY(EditAnywhere)
+	float MaxSpeed;
+
+	float ActualSpeed;
+	float increaserH = 0;
+	float increaserV = 0;
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

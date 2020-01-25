@@ -11,6 +11,8 @@
 #include "Components/AudioComponent.h"
 #include "MoneyManager.h"
 #include "Math/UnrealMathUtility.h" 
+#include "Math/Vector.h" 
+#include "Math/UnrealMathUtility.h" 
 #include "Components/TextRenderComponent.h"
 #include "UObject/ConstructorHelpers.h" 
 #include "Particles/ParticleSystemComponent.h"
@@ -83,6 +85,14 @@ ABuildingEscapeCharacter::ABuildingEscapeCharacter()
 		DebuffMontage = DebuffAnimMontage.Object;
 	}
 
+	ConstructorHelpers::FObjectFinder<UAnimMontage>
+		RollAnimMontage(TEXT("AnimMontage'/Game/RollsAndDodges/Animations/RollMontage.RollMontage'"));
+
+	if (RollAnimMontage.Succeeded())
+	{
+		RollMontage = RollAnimMontage.Object;
+	}
+
 	BurningSound = CreateDefaultSubobject<UAudioComponent>(TEXT("BurnSound"));
 	BurningSound->SetupAttachment(RootComponent);
 	BurningSound->bAutoActivate = false;
@@ -99,8 +109,8 @@ void ABuildingEscapeCharacter::SetupPlayerInputComponent(class UInputComponent* 
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ABuildingEscapeCharacter::Roll);
+	//PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABuildingEscapeCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABuildingEscapeCharacter::MoveRight);
@@ -113,12 +123,12 @@ void ABuildingEscapeCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ABuildingEscapeCharacter::LookUpAtRate);
 
-	// handle touch devices
-	PlayerInputComponent->BindTouch(IE_Pressed, this, &ABuildingEscapeCharacter::TouchStarted);
-	PlayerInputComponent->BindTouch(IE_Released, this, &ABuildingEscapeCharacter::TouchStopped);
+	//// handle touch devices
+	//PlayerInputComponent->BindTouch(IE_Pressed, this, &ABuildingEscapeCharacter::TouchStarted);
+	//PlayerInputComponent->BindTouch(IE_Released, this, &ABuildingEscapeCharacter::TouchStopped);
 
 	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ABuildingEscapeCharacter::OnResetVR);
+	//PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ABuildingEscapeCharacter::OnResetVR);
 }
 
 void ABuildingEscapeCharacter::Tick(float DeltaTime)
@@ -173,15 +183,15 @@ void ABuildingEscapeCharacter::OnResetVR()
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-void ABuildingEscapeCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		Jump();
-}
-
-void ABuildingEscapeCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
-{
-		StopJumping();
-}
+//void ABuildingEscapeCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
+//{
+//		Jump();
+////}
+//
+//void ABuildingEscapeCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
+//{
+//		StopJumping();
+//}
 
 void ABuildingEscapeCharacter::EnterPickUpRange(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -214,11 +224,21 @@ void ABuildingEscapeCharacter::MoveForward(float Value)
 		// find out which way is forward
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
+		UPawnMovementComponent* MovementComponent = GetMovementComponent();
 		// get forward vector
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		//ActualSpeed = FMath::Lerp(0.0f, 400.0f,
+		//	FMath::Clamp(increaserH += GetWorld()->GetDeltaSeconds() / 2, 0.0f, 1.0f));
+
+		////MovementComponent->Velocity = Direction * ActualSpeed * Value;
+		//GetRootComponent()->ComponentVelocity = Direction * ActualSpeed * Value;
+
 		AddMovementInput(Direction, Value);
+
 	}
+
+	XMoveDir = Value;
 }
 
 void ABuildingEscapeCharacter::MoveRight(float Value)
@@ -228,10 +248,89 @@ void ABuildingEscapeCharacter::MoveRight(float Value)
 		// find out which way is right
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		UPawnMovementComponent* MovementComponent = GetMovementComponent();
 	
+		//ActualSpeed = FMath::Lerp(0.0f, 400.0f, 
+		//	FMath::Clamp(increaserH += GetWorld()->GetDeltaSeconds() / 2, 0.0f,1.0f));
+
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
+		//MovementComponent->Velocity = Direction * ActualSpeed * Value;
+		//GetRootComponent()->ComponentVelocity = Direction * ActualSpeed * Value;
+
 	}
+
+	YMoveDir = Value;
+}
+
+void ABuildingEscapeCharacter::Roll()
+{
+	PlayAnimMontage(RollMontage, 1.f, "start01");
+
+
+	if ((Controller != NULL))
+	{
+		// find out which way is forward
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+		UPawnMovementComponent* MovementComponent = GetMovementComponent();
+		// get forward vector
+		FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		
+		Direction *= 50000;
+		//GetRootComponent()->ComponentVelocity = Direction;
+		//MovementComponent->AddInputVector(Direction, true);
+		AddMovementInput(Direction, 1.0f);
+	}
+	//UE_LOG(LogTemp, Warning, TEXT("%f, %f"), XMoveDir, YMoveDir)
+	//FVector2D moveDir = FVector2D(XMoveDir, YMoveDir);
+	// = moveDir.GetSafeNormal();
+	//if (moveDir.X >= 0.9f && (moveDir.Y <= 0.1f && moveDir.Y >= -0.1f))
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Man1"))
+	//}
+	//else if ((moveDir.X <= 0.1f && moveDir.X >= -0.1f) && moveDir.Y <= -0.9)
+	//{
+	//	PlayAnimMontage(RollMontage, 1.f, "start03");
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Ma2"))
+
+	//}
+	//else if (moveDir.X <= -0.9f && (moveDir.Y <= 0.1f && moveDir.Y >= -0.1f))
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Man3"))
+
+	//	PlayAnimMontage(RollMontage, 1.f, "start05");
+	//}
+	//else if ((moveDir.X <= 0.1f && moveDir.X >= -0.1f) && moveDir.Y >= 0.9f)
+	//{
+	//	
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Man4"))
+	//		PlayAnimMontage(RollMontage, 1.f, "start07");
+	//}
+	//else if (moveDir.X >= -0.5f && moveDir.Y >= 0.5f)
+	//{
+	//	PlayAnimMontage(RollMontage, 1.f, "start02");
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Man5"))
+
+	//}
+	//else if (moveDir.X <= -0.5f && moveDir.Y <= -0.5f)
+	//{
+	//	PlayAnimMontage(RollMontage, 1.f, "start04");
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Man6"))
+
+	//}
+	//else if (moveDir.X <= -0.5f && moveDir.Y >= 0.5f)
+	//{
+	//	PlayAnimMontage(RollMontage, 1.f, "start06");
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Man7"))
+
+	//}
+	//else
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("Nah Man8"))
+	//	PlayAnimMontage(RollMontage, 1.f, "start08");
+	//}
 }
