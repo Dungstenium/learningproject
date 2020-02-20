@@ -27,23 +27,27 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-		if (bShouldMoveX && DoorActualLocation.X != DoorStartingLocation.X - DoorMoveDistance)
-		{
-			DoorActualLocation.X = FMath::FInterpConstantTo(DoorActualLocation.X,
-				DoorStartingLocation.X - DoorMoveDistance, DeltaTime, DoorOpenSpeed);
-		}
-		else if (bShouldMoveY && DoorActualLocation.Y != DoorStartingLocation.Y - DoorMoveDistance)
-		{
-			DoorActualLocation.Y = FMath::FInterpConstantTo(DoorActualLocation.Y,
-				DoorStartingLocation.Y - DoorMoveDistance, DeltaTime, DoorOpenSpeed);
-		}
-		else if (bShouldMoveZ && DoorActualLocation.Z != DoorStartingLocation.Z - DoorMoveDistance)
-		{
-			DoorActualLocation.Z = FMath::FInterpConstantTo(DoorActualLocation.Z,
-				DoorStartingLocation.Z - DoorMoveDistance, DeltaTime, DoorOpenSpeed);
-		}
+	OpenDoor(DeltaTime);
+}
+
+void UOpenDoor::OpenDoor(float DeltaTime)
+{
+	if (bShouldMoveX && DoorActualLocation.X != DoorStartingLocation.X - DoorMoveDistance)
+	{
+		DoorActualLocation.X = FMath::FInterpConstantTo(DoorActualLocation.X,
+			DoorStartingLocation.X - DoorMoveDistance, DeltaTime, DoorOpenSpeed);
+	}
+	else if (bShouldMoveY && DoorActualLocation.Y != DoorStartingLocation.Y - DoorMoveDistance)
+	{
+		DoorActualLocation.Y = FMath::FInterpConstantTo(DoorActualLocation.Y,
+			DoorStartingLocation.Y - DoorMoveDistance, DeltaTime, DoorOpenSpeed);
+	}
+	else if (bShouldMoveZ && DoorActualLocation.Z != DoorStartingLocation.Z - DoorMoveDistance)
+	{
+		DoorActualLocation.Z = FMath::FInterpConstantTo(DoorActualLocation.Z,
+			DoorStartingLocation.Z - DoorMoveDistance, DeltaTime, DoorOpenSpeed);
+	}
 
 	GetOwner()->SetActorLocation(DoorActualLocation);
-	//GetOwner()->SetActorRelativeLocation(DoorActualLocation);
 }
 
