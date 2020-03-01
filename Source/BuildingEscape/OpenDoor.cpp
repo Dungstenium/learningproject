@@ -1,8 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "OpenDoor.h"
+#include "Engine/TriggerVolume.h"
+#include "GameFramework/PlayerController.h" 
+#include "Engine/World.h" 
 #include "GameFramework//Actor.h"
+#include "OpenDoor.h"
+
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
 {
@@ -11,23 +15,39 @@ UOpenDoor::UOpenDoor()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-
-// Called when the game starts
 void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
 	DoorStartingLocation = GetOwner()->GetActorLocation();
 	DoorActualLocation = GetOwner()->GetActorLocation();
+
+	if (ActorThatOpens == NULL)
+	{
+		ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
+	}
 }
 
-
-// Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	OpenDoor(DeltaTime);
+	if (DoorTrigger->IsOverlappingActor(ActorThatOpens))
+	{
+		OpenDoor(DeltaTime);
+		bPlayerLeftTrigger = false;
+		TimeSincePlayerLeftTrigger = 0;
+	}
+	else
+	{
+		bPlayerLeftTrigger = true;
+		TimeSincePlayerLeftTrigger += DeltaTime;
+
+		if (bPlayerLeftTrigger && TimeSincePlayerLeftTrigger >= DoorDelayToClose)
+		{
+			CloseDoor(DeltaTime);
+		}
+	}
 }
 
 void UOpenDoor::OpenDoor(float DeltaTime)
@@ -46,6 +66,27 @@ void UOpenDoor::OpenDoor(float DeltaTime)
 	{
 		DoorActualLocation.Z = FMath::FInterpConstantTo(DoorActualLocation.Z,
 			DoorStartingLocation.Z - DoorMoveDistance, DeltaTime, DoorOpenSpeed);
+	}
+
+	GetOwner()->SetActorLocation(DoorActualLocation);
+}
+
+void UOpenDoor::CloseDoor(float DeltaTime)
+{
+	if (bShouldMoveX)
+	{
+		DoorActualLocation.X = FMath::FInterpConstantTo(DoorActualLocation.X,
+			DoorStartingLocation.X, DeltaTime, DoorOpenSpeed);
+	}
+	else if (bShouldMoveY)
+	{
+		DoorActualLocation.Y = FMath::FInterpConstantTo(DoorActualLocation.Y,
+			DoorStartingLocation.Y, DeltaTime, DoorOpenSpeed);
+	}
+	else if (bShouldMoveZ)
+	{
+		DoorActualLocation.Z = FMath::FInterpConstantTo(DoorActualLocation.Z,
+			DoorStartingLocation.Z, DeltaTime, DoorOpenSpeed);
 	}
 
 	GetOwner()->SetActorLocation(DoorActualLocation);

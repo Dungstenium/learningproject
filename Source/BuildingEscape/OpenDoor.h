@@ -25,6 +25,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	void OpenDoor(float DeltaTime);
+	void CloseDoor(float DeltaTime);
 
 private:
 
@@ -40,7 +41,17 @@ private:
 	UPROPERTY(EditAnywhere)
 		bool bShouldMoveZ{ false };
 
+	UPROPERTY(EditAnywhere)
+		class ATriggerVolume* DoorTrigger;
+
+	AActor* ActorThatOpens;
+
 	FVector DoorActualLocation;
 	FVector DoorStartingLocation;
 
+	bool bPlayerLeftTrigger{ true };
+	float TimeSincePlayerLeftTrigger{ 0.0f };
+
+	UPROPERTY(EditAnywhere)
+		float DoorDelayToClose;
 };
