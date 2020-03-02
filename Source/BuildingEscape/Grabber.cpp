@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Actor.h" 
 #include "GameFramework/PlayerController.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Grabber.h"
 
 #define OUT
@@ -24,6 +25,12 @@ void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+
+	if (!PhysicsHandle)
+	{
+		UE_LOG(LogTemp, Error, TEXT("The Grabber component of the object %s couldn't find the PhysicsHandle"), *GetOwner()->GetName())
+	}
 	// ...
 	
 }

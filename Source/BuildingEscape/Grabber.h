@@ -20,12 +20,15 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+private:
+
 	UPROPERTY(EditAnywhere)
 	float Reach{ 200.0f };
+	
+	class UPhysicsHandleComponent* PhysicsHandle{ nullptr };
 
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
 };
