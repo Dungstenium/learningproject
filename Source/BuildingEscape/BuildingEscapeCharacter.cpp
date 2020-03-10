@@ -9,6 +9,7 @@
 #include "Runtime/Renderer/Public/MeshDrawShaderBindings.h"
 #include "GameFramework/Controller.h"
 #include "Components/AudioComponent.h"
+#include "MovableWardrobe.h"
 #include "MoneyManager.h"
 #include "Math/UnrealMathUtility.h" 
 #include "Math/Vector.h" 
@@ -131,6 +132,14 @@ void ABuildingEscapeCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	//PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ABuildingEscapeCharacter::OnResetVR);
 }
 
+void ABuildingEscapeCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GetCapsuleComponent()->OnComponentEndOverlap.AddDynamic(this, &ABuildingEscapeCharacter::OnOverlapEnd);
+
+}
+
 void ABuildingEscapeCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -202,6 +211,18 @@ void ABuildingEscapeCharacter::EnterPickUpRange(UPrimitiveComponent* OverlappedC
 			PlayAnimMontage(DebuffMontage, 1.f, "start02");
 			bHasGranade = true;
 		}
+	}
+	if (OtherActor->IsA<AMovableWardrobe>())
+	{
+		PlayAnimMontage(DebuffMontage, 1.f, "start03");
+	}
+}
+
+void ABuildingEscapeCharacter::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor->IsA<AMovableWardrobe>())
+	{
+		StopAnimMontage(DebuffMontage);
 	}
 }
 

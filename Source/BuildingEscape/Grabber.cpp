@@ -1,49 +1,58 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-#include "Camera/PlayerCameraManager.h" 
+#include "Grabber.h"
+#include "Camera/PlayerCameraManager.h"
+#include "Components/InputComponent.h" 
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h" 
 #include "GameFramework/PlayerController.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
-#include "Grabber.h"
 
 #define OUT
-// Sets default values for this component's properties
 UGrabber::UGrabber()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
 
-
-// Called when the game starts
 void UGrabber::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
+	FindPhysicsHandle();
+	SetupInputComponent();
+}
 
+void UGrabber::SetupInputComponent()
+{
+	InputComponent = GetOwner()->FindComponentByClass<UInputComponent>();
+	if (InputComponent)
+	{
+		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::StartPushingFurniture);
+		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::StopPushingFurniture);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("The Grabber component of the object %s couldn't find the InputComponent"), *GetOwner()->GetName())
+	}
+}
+
+void UGrabber::FindPhysicsHandle()
+{
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 	if (!PhysicsHandle)
 	{
 		UE_LOG(LogTemp, Error, TEXT("The Grabber component of the object %s couldn't find the PhysicsHandle"), *GetOwner()->GetName())
 	}
-	// ...
-	
 }
 
-
-// Called every frame
-void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UGrabber::StartPushingFurniture()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	UE_LOG(LogTemp, Error, TEXT("Start Pushing working"))
+	
 	FVector PlayerViewPointLocation;
 	FRotator PlayerViewPointRotation;
-	
+
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
 		OUT PlayerViewPointLocation,
 		OUT PlayerViewPointRotation);
@@ -51,8 +60,64 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	FVector PlayerPosition = GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation();
 
 	FVector LineTraceEnd = PlayerPosition + PlayerViewPointRotation.Vector() * Reach;
-	
-	DrawDebugLine(GetWorld(), PlayerPosition, LineTraceEnd, FColor::Red, false, 0.0f, 0, 3.0f);
+
+	FHitResult GrabResult = GetFirstPhysicsBodyInReach();
+
+	if (GrabResult.GetActor())
+	{
+			UPrimitiveComponent* ComponentToGrab = GrabResult.GetComponent();
+
+			//PhysicsHandle->GrabComponentAtLocation(ComponentToGrab, NAME_None, LineTraceEnd);
+			PhysicsHandle->GrabComponentAtLocationWithRotation(ComponentToGrab, NAME_None, LineTraceEnd, GrabResult.GetActor()->GetActorRotation());
+			PhysicsHandle->SetLinearDamping(Damping);
+			PhysicsHandle->SetLinearStiffness(Stiffness);
+			PhysicsHandle->SetInterpolationSpeed(Speed);
+	}
+}
+
+void UGrabber::StopPushingFurniture()
+{
+	UE_LOG(LogTemp, Error, TEXT("Stop Pushing working"))
+
+	PhysicsHandle->ReleaseComponent();
+}
+
+void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (PhysicsHandle->GrabbedComponent)
+	{
+		FVector PlayerViewPointLocation;
+		FRotator PlayerViewPointRotation;
+
+		GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+			OUT PlayerViewPointLocation,
+			OUT PlayerViewPointRotation);
+
+		FVector PlayerPosition = GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation();
+
+		FVector LineTraceEnd = PlayerPosition + PlayerViewPointRotation.Vector() * Reach;
+
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);			
+	}
+
+}
+
+FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
+{
+	FVector PlayerViewPointLocation;
+	FRotator PlayerViewPointRotation;
+
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(
+		OUT PlayerViewPointLocation,
+		OUT PlayerViewPointRotation);
+
+	FVector PlayerPosition = GetWorld()->GetFirstPlayerController()->GetPawn()->GetActorLocation();
+
+	FVector LineTraceEnd = PlayerPosition + PlayerViewPointRotation.Vector() * Reach;
+
+	DrawDebugLine(GetWorld(), PlayerPosition, LineTraceEnd, FColor::Red, false, 4.0f, 0, 3.0f);
 
 	FHitResult Hit;
 	FCollisionQueryParams TraceParams(TEXT(""), false, GetOwner());
@@ -67,5 +132,6 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.Actor->GetName())
 	}
-}
 
+	return Hit;
+}

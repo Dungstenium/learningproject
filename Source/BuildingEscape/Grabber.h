@@ -13,22 +13,37 @@ class BUILDINGESCAPE_API UGrabber : public UActorComponent
 	GENERATED_BODY()
 
 public:	
-	// Sets default values for this component's properties
+
 	UGrabber();
+	
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	FHitResult GetFirstPhysicsBodyInReach() const;
 
 protected:
-	// Called when the game starts
+
 	virtual void BeginPlay() override;
 
 private:
 
 	UPROPERTY(EditAnywhere)
 	float Reach{ 200.0f };
-	
+	UPROPERTY(EditAnywhere)
+		float Damping{ 1.0f };
+	UPROPERTY(EditAnywhere)
+		float Stiffness{ 1.0f };
+	UPROPERTY(EditAnywhere)
+		float Speed{ 1.0f };
+
+
+
 	class UPhysicsHandleComponent* PhysicsHandle{ nullptr };
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	class UInputComponent* InputComponent{ nullptr };
 
+	void SetupInputComponent();
+	void FindPhysicsHandle();
+
+	void StartPushingFurniture();
+	void StopPushingFurniture();
 };
